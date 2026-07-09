@@ -12,6 +12,7 @@ import OrderSuccess from './pages/OrderSuccess';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import MyOrders from './pages/MyOrders';
+import Wishlist from './pages/Wishlist';
 import About from './pages/About';
 import Contact from './pages/Contact';
 import ShippingPolicy from './pages/ShippingPolicy';
@@ -25,7 +26,7 @@ import AdminRoute from './components/AdminRoute';
 
 function App() {
   return (
-    <div className="min-h-screen bg-bone flex flex-col">
+    <div className="min-h-screen bg-bone flex flex-col overflow-x-hidden">
       <ScrollToTop />
       <Navbar />
       <div className="flex-1">
@@ -40,6 +41,7 @@ function App() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password/:token" element={<ResetPassword />} />
           <Route path="/my-orders" element={<MyOrders />} />
+          <Route path="/wishlist" element={<Wishlist />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/shipping-policy" element={<ShippingPolicy />} />

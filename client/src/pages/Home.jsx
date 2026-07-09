@@ -1,23 +1,32 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import API from '../api/axios';
 import ProductCard from '../components/ProductCard';
 import FilterBar from '../components/FilterBar';
 import TrustBadges from '../components/TrustBadges';
 import BrandStory from '../components/BrandStory';
+import CategoryTiles from '../components/CategoryTiles';
 
 function Home() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filters, setFilters] = useState({
-    category: '',
+    category: searchParams.get('category') || '',
     productType: '',
     search: '',
     minPrice: '',
     maxPrice: '',
     sort: 'newest',
   });
+
+  // Keep filters in sync if the URL changes (e.g., clicking a category tile again)
+  useEffect(() => {
+    const urlCategory = searchParams.get('category') || '';
+    setFilters((prev) => ({ ...prev, category: urlCategory, productType: '' }));
+  }, [searchParams]);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -44,10 +53,20 @@ function Home() {
     fetchProducts();
   }, [filters]);
 
+  const handleFilterChange = (newFilters) => {
+    setFilters(newFilters);
+    // Keep the URL in sync with the category filter too
+    if (newFilters.category) {
+      setSearchParams({ category: newFilters.category });
+    } else {
+      setSearchParams({});
+    }
+  };
+
   return (
     <div>
       {/* Hero */}
-      <section className="max-w-6xl mx-auto px-6 pt-16 pb-16">
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 pt-12 sm:pt-16 pb-12 sm:pb-16">
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -60,7 +79,7 @@ function Home() {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.1 }}
-          className="font-body text-5xl md:text-7xl leading-[1.05] text-ink max-w-2xl"
+          className="font-body text-4xl sm:text-5xl md:text-7xl leading-[1.05] text-ink max-w-2xl"
         >
           Woven with care, worn everywhere.
         </motion.h1>
@@ -75,13 +94,15 @@ function Home() {
 
       <TrustBadges />
 
+      <CategoryTiles />
+
       {/* Products */}
-      <section className="max-w-6xl mx-auto px-6 py-16">
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
         <h2 className="font-display uppercase tracking-wide text-sm text-ink/50 mb-6">
           The Collection
         </h2>
 
-        <FilterBar filters={filters} onChange={setFilters} />
+        <FilterBar filters={filters} onChange={handleFilterChange} />
 
         {loading && <p className="font-display text-ink/50">Loading products...</p>}
         {error && <p className="font-display text-madder">{error}</p>}

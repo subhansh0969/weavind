@@ -3,11 +3,16 @@ import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import API from "../api/axios";
 import { useCart } from "../context/CartContext";
+import { useWishlist } from "../context/WishlistContext";
+import { useAuth } from "../context/AuthContext";
 import ProductReviews from "../components/ProductReviews";
+import ProductGallery from "../components/ProductGallery";
 
 function ProductDetail() {
   const { id } = useParams();
   const { addToCart } = useCart();
+  const { user } = useAuth();
+  const { isWishlisted, toggleWishlist } = useWishlist();
   const [added, setAdded] = useState(false);
   const [product, setProduct] = useState(null);
   const [selectedSize, setSelectedSize] = useState(null);
@@ -53,24 +58,16 @@ function ProductDetail() {
         </Link>
 
         <div className="grid md:grid-cols-2 gap-8 md:gap-12 mt-6 md:mt-8">
-          {/* Image */}
+          {/* Image Gallery */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5 }}
-            className="aspect-[3/4] bg-ink/5 rounded-sm overflow-hidden flex items-center justify-center relative"
+            className="relative"
           >
-            {product.images && product.images.length > 0 ? (
-              <img
-                src={product.images[0]}
-                alt={product.name}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <span className="font-display text-ink/30">No Image</span>
-            )}
+            <ProductGallery images={product.images} productName={product.name} />
             {hasDiscount && (
-              <div className="absolute top-4 right-4 bg-madder text-white px-3 py-1.5 text-xs uppercase tracking-wider font-display rounded-sm">
+              <div className="absolute top-4 right-4 bg-madder text-white px-3 py-1.5 text-xs uppercase tracking-wider font-display rounded-sm z-10">
                 {discountPercent}% OFF
               </div>
             )}
@@ -85,9 +82,30 @@ function ProductDetail() {
             <p className="font-display uppercase tracking-[0.2em] text-xs text-madder mb-3">
               {product.category} · {product.brand}
             </p>
-            <h1 className="font-body text-2xl sm:text-4xl text-ink leading-tight mb-4">
-              {product.name}
-            </h1>
+            <div className="flex items-start justify-between gap-4 mb-4">
+              <h1 className="font-body text-2xl sm:text-4xl text-ink leading-tight">
+                {product.name}
+              </h1>
+              {user && (
+                <motion.button
+                  whileTap={{ scale: 0.85 }}
+                  onClick={() => toggleWishlist(product._id)}
+                  className="flex-shrink-0 w-10 h-10 rounded-full border border-ink/15 flex items-center justify-center mt-1"
+                  aria-label="Toggle wishlist"
+                >
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill={isWishlisted(product._id) ? '#A8412F' : 'none'}
+                    stroke={isWishlisted(product._id) ? '#A8412F' : '#161616'}
+                    strokeWidth="2"
+                  >
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                  </svg>
+                </motion.button>
+              )}
+            </div>
 
             <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-6">
               <p className="font-display text-xl sm:text-2xl text-ink">₹{product.price}</p>

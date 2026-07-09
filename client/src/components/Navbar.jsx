@@ -3,10 +3,12 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import { useWishlist } from '../context/WishlistContext';
 
 function Navbar() {
   const { cartCount } = useCart();
   const { user, logout } = useAuth();
+  const { wishlistCount } = useWishlist();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -19,42 +21,42 @@ function Navbar() {
   const closeMenu = () => setMenuOpen(false);
 
   return (
-    <nav className="sticky top-0 z-50 bg-bone/90 backdrop-blur-md border-b border-ink/10">
-      <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-        <Link to="/" className="font-display font-700 text-2xl tracking-tight text-ink">
+    <nav className="sticky top-0 z-50 bg-bone/90 backdrop-blur-md border-b border-ink/10 overflow-x-hidden">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
+        <Link to="/" className="font-display font-700 text-xl sm:text-2xl tracking-tight text-ink flex-shrink-0">
           Weavind
         </Link>
 
-        <div className="hidden md:flex items-center gap-8 font-display text-sm uppercase tracking-wide text-ink/70">
-          <span className="cursor-pointer hover:text-indigo transition-colors">Men</span>
-          <span className="cursor-pointer hover:text-indigo transition-colors">Women</span>
-          <span className="cursor-pointer hover:text-indigo transition-colors">Kids</span>
-          <span className="cursor-pointer hover:text-indigo transition-colors">Unisex</span>
+        <div className="hidden lg:flex items-center gap-6 xl:gap-8 font-display text-sm uppercase tracking-wide text-ink/70 flex-shrink-0">
+          <Link to="/?category=Men" className="hover:text-indigo transition-colors">Men</Link>
+          <Link to="/?category=Women" className="hover:text-indigo transition-colors">Women</Link>
+          <Link to="/?category=Kids" className="hover:text-indigo transition-colors">Kids</Link>
+          <Link to="/?category=Unisex" className="hover:text-indigo transition-colors">Unisex</Link>
         </div>
 
-        <div className="flex items-center gap-3 md:gap-4">
+        <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
           {user ? (
-            <div className="hidden md:flex items-center gap-4">
+            <div className="hidden lg:flex items-center gap-3 xl:gap-4">
               {user.role === 'admin' && (
                 <Link
                   to="/admin"
-                  className="font-display text-xs uppercase tracking-wide text-gold hover:text-indigo transition-colors"
+                  className="font-display text-xs uppercase tracking-wide text-gold hover:text-indigo transition-colors whitespace-nowrap"
                 >
                   Admin
                 </Link>
               )}
               <Link
                 to="/my-orders"
-                className="font-display text-xs uppercase tracking-wide text-ink/70 hover:text-indigo transition-colors"
+                className="font-display text-xs uppercase tracking-wide text-ink/70 hover:text-indigo transition-colors whitespace-nowrap"
               >
-                My Orders
+                Orders
               </Link>
-              <span className="font-display text-sm text-ink/70">
+              <span className="font-display text-sm text-ink/70 whitespace-nowrap">
                 Hi, {user.name.split(' ')[0]}
               </span>
               <button
                 onClick={handleLogout}
-                className="font-display text-xs uppercase tracking-wide text-ink/50 hover:text-madder transition-colors"
+                className="font-display text-xs uppercase tracking-wide text-ink/50 hover:text-madder transition-colors whitespace-nowrap"
               >
                 Logout
               </button>
@@ -62,10 +64,28 @@ function Navbar() {
           ) : (
             <Link
               to="/login"
-              className="hidden md:block font-display text-xs uppercase tracking-wide text-ink/70 hover:text-indigo transition-colors"
+              className="hidden lg:block font-display text-xs uppercase tracking-wide text-ink/70 hover:text-indigo transition-colors whitespace-nowrap"
             >
               Login
             </Link>
+          )}
+
+          {user && (
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => navigate('/wishlist')}
+              className="relative w-9 h-9 rounded-full border border-ink/15 flex items-center justify-center cursor-pointer flex-shrink-0"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#161616" strokeWidth="2">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+              </svg>
+              {wishlistCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 bg-madder text-white text-[10px] font-display w-5 h-5 rounded-full flex items-center justify-center">
+                  {wishlistCount}
+                </span>
+              )}
+            </motion.div>
           )}
 
           <motion.div
@@ -85,10 +105,10 @@ function Navbar() {
             )}
           </motion.div>
 
-          {/* Hamburger button - mobile only */}
+          {/* Hamburger button - shows below lg now */}
           <button
             onClick={() => setMenuOpen(!menuOpen)}
-            className="md:hidden w-9 h-9 flex flex-col items-center justify-center gap-1.5 flex-shrink-0"
+            className="lg:hidden w-9 h-9 flex flex-col items-center justify-center gap-1.5 flex-shrink-0"
             aria-label="Menu"
           >
             <span
@@ -116,7 +136,7 @@ function Navbar() {
         </div>
       </div>
 
-      {/* Mobile menu panel */}
+      {/* Mobile/tablet menu panel - shows below lg now */}
       <AnimatePresence>
         {menuOpen && (
           <motion.div
@@ -124,9 +144,9 @@ function Navbar() {
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.25 }}
-            className="md:hidden overflow-hidden border-t border-ink/10 bg-bone"
+            className="lg:hidden overflow-hidden border-t border-ink/10 bg-bone"
           >
-            <div className="px-6 py-5 flex flex-col gap-4">
+            <div className="px-4 sm:px-6 py-5 flex flex-col gap-4">
               <Link onClick={closeMenu} to="/?category=Men" className="font-display text-sm uppercase tracking-wide text-ink/70">
                 Men
               </Link>
@@ -149,6 +169,9 @@ function Navbar() {
                   </p>
                   <Link onClick={closeMenu} to="/my-orders" className="font-display text-sm uppercase tracking-wide text-ink/70">
                     My Orders
+                  </Link>
+                  <Link onClick={closeMenu} to="/wishlist" className="font-display text-sm uppercase tracking-wide text-ink/70">
+                    Wishlist {wishlistCount > 0 ? '(' + wishlistCount + ')' : ''}
                   </Link>
                   {user.role === 'admin' && (
                     <Link onClick={closeMenu} to="/admin" className="font-display text-sm uppercase tracking-wide text-gold">
@@ -183,7 +206,5 @@ function Navbar() {
     </nav>
   );
 }
-
-async function noop() {}
 
 export default Navbar;

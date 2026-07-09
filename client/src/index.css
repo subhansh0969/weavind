@@ -16,3 +16,12 @@ body {
   color: var(--color-ink);
   font-family: var(--font-body);
 }
+/* Hide scrollbar visually across browsers, but keep scrolling functional */
+html {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+html::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
