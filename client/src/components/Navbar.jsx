@@ -11,6 +11,8 @@ function Navbar() {
   const { wishlistCount } = useWishlist();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchValue, setSearchValue] = useState('');
 
   const handleLogout = () => {
     logout();
@@ -19,6 +21,17 @@ function Navbar() {
   };
 
   const closeMenu = () => setMenuOpen(false);
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    const query = searchValue.trim();
+    navigate(query ? `/?search=${encodeURIComponent(query)}` : '/');
+    setSearchOpen(false);
+    setMenuOpen(false);
+    setTimeout(() => {
+      document.getElementById('collection')?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
+  };
 
   return (
     <nav className="sticky top-0 z-50 bg-bone/90 backdrop-blur-md border-b border-ink/10 overflow-x-hidden">
@@ -35,6 +48,19 @@ function Navbar() {
         </div>
 
         <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setSearchOpen(!searchOpen)}
+            className="w-9 h-9 rounded-full border border-ink/15 flex items-center justify-center flex-shrink-0"
+            aria-label="Search"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#161616" strokeWidth="2">
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.35-4.35" />
+            </svg>
+          </motion.button>
+
           {user ? (
             <div className="hidden lg:flex items-center gap-3 xl:gap-4">
               {user.role === 'admin' && (
@@ -135,6 +161,44 @@ function Navbar() {
           </button>
         </div>
       </div>
+
+      {/* Expanding search bar */}
+      <AnimatePresence>
+        {searchOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="overflow-hidden border-t border-ink/10 bg-bone"
+          >
+            <form
+              onSubmit={handleSearchSubmit}
+              className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center gap-3"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161616" strokeWidth="2" className="flex-shrink-0 text-ink/40">
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.35-4.35" />
+              </svg>
+              <input
+                type="text"
+                autoFocus
+                value={searchValue}
+                onChange={(e) => setSearchValue(e.target.value)}
+                placeholder="Search for products, categories..."
+                className="flex-1 bg-transparent font-display text-sm focus:outline-none placeholder:text-ink/40"
+              />
+              <button
+                type="button"
+                onClick={() => setSearchOpen(false)}
+                className="font-display text-xs uppercase tracking-wide text-ink/50 hover:text-madder transition-colors flex-shrink-0"
+              >
+                Close
+              </button>
+            </form>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Mobile/tablet menu panel - shows below lg now */}
       <AnimatePresence>

@@ -16,16 +16,16 @@ function Home() {
   const [filters, setFilters] = useState({
     category: searchParams.get('category') || '',
     productType: '',
-    search: '',
+    search: searchParams.get('search') || '',
     minPrice: '',
     maxPrice: '',
     sort: 'newest',
   });
 
-  // Keep filters in sync if the URL changes (e.g., clicking a category tile again)
   useEffect(() => {
     const urlCategory = searchParams.get('category') || '';
-    setFilters((prev) => ({ ...prev, category: urlCategory, productType: '' }));
+    const urlSearch = searchParams.get('search') || '';
+    setFilters((prev) => ({ ...prev, category: urlCategory, search: urlSearch, productType: '' }));
   }, [searchParams]);
 
   useEffect(() => {
@@ -55,7 +55,6 @@ function Home() {
 
   const handleFilterChange = (newFilters) => {
     setFilters(newFilters);
-    // Keep the URL in sync with the category filter too
     if (newFilters.category) {
       setSearchParams({ category: newFilters.category });
     } else {
@@ -97,7 +96,7 @@ function Home() {
       <CategoryTiles />
 
       {/* Products */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
+      <section id="collection" className="max-w-6xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
         <h2 className="font-display uppercase tracking-wide text-sm text-ink/50 mb-6">
           The Collection
         </h2>
