@@ -31,6 +31,7 @@ function AdminProductForm() {
     brand: '',
     returnPolicyDays: 7,
   });
+  
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(isEditMode);
   const [error, setError] = useState('');
@@ -52,10 +53,10 @@ function AdminProductForm() {
             images: p.images || [],
             stock: p.stock,
             brand: p.brand,
-            returnPolicyDays: p.returnPolicyDays || 7,
+            returnPolicyDays: p.returnPolicyDays ?? 7, // Handle 0 correctly
           });
         })
-        .catch(() => setError('Failed to load product'))
+        .catch(() => setError('Failed to load product. Please refresh the page.'))
         .finally(() => setFetching(false));
     }
   }, [id, isEditMode]);
@@ -75,17 +76,15 @@ function AdminProductForm() {
     setError('');
 
     if (form.sizes.length === 0) {
-      setError('Please add at least one size');
+      setError('Please add at least one available size.');
       return;
     }
-
     if (!form.productType) {
-      setError('Please select a product type');
+      setError('Please select a specific product type.');
       return;
     }
-
     if (Number(form.price) > Number(form.mrp)) {
-      setError('Selling price cannot be higher than MRP');
+      setError('Selling price cannot be higher than the Original MRP.');
       return;
     }
 
@@ -115,7 +114,7 @@ function AdminProductForm() {
 
       navigate('/admin');
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to save product');
+      setError(err.response?.data?.message || 'Failed to save product. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -130,269 +129,330 @@ function AdminProductForm() {
 
   if (fetching) {
     return (
-      <p className="font-display text-center py-20 text-ink/50">
-        Loading product...
-      </p>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-20 flex flex-col items-center justify-center">
+        <div className="w-8 h-8 border-2 border-indigo border-t-transparent rounded-full animate-spin mb-4" />
+        <p className="font-display text-xs uppercase tracking-widest text-ink/50">
+          Loading Product Data...
+        </p>
+      </div>
     );
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10 sm:py-16">
       <Link
         to="/admin"
-        className="font-display text-xs uppercase tracking-wide text-ink/50 hover:text-indigo transition-colors"
+        className="inline-flex items-center font-display text-[11px] uppercase tracking-widest text-ink/50 hover:text-ink transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold rounded-sm px-1 -mx-1 mb-8"
       >
-        ← Back to Dashboard
+        <span className="mr-2">←</span> Back to Dashboard
       </Link>
 
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mt-6"
-      >
-        <h1 className="font-body text-2xl sm:text-3xl text-ink mb-2">
-          {isEditMode ? 'Edit Product' : 'Add New Product'}
-        </h1>
-        <p className="font-display text-sm text-ink/50 mb-8 sm:mb-10">
-          {isEditMode ? 'Update product details' : 'Add a new item to the Weavind collection'}
-        </p>
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10">
+          <div>
+            <h1 className="font-body text-3xl sm:text-4xl text-ink mb-2">
+              {isEditMode ? 'Edit Product' : 'New Product'}
+            </h1>
+            <p className="font-display text-[11px] uppercase tracking-widest text-ink/50">
+              {isEditMode ? `Updating ID: #${id.slice(-6).toUpperCase()}` : 'Add a new item to the catalog'}
+            </p>
+          </div>
+        </div>
 
-        <form onSubmit={handleSubmit} className="space-y-8 sm:space-y-10">
-          {/* Basic Info */}
-          <section>
-            <h3 className="font-display uppercase tracking-wide text-xs text-madder mb-4 pb-2 border-b border-ink/10">
+        {error && (
+          <div className="bg-madder/5 border border-madder/20 p-4 rounded-sm flex items-start gap-3 mb-8">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-madder mt-0.5 flex-shrink-0">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            <p className="text-madder text-sm font-display">{error}</p>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-12">
+          
+          {/* Section 1: Core Details */}
+          <section className="bg-bone/30 border border-ink/10 p-6 sm:p-8 rounded-sm">
+            <h3 className="font-display text-sm uppercase tracking-widest text-ink/80 mb-6 flex items-center gap-3">
+              <span className="w-6 h-[1px] bg-ink/20 block" />
               Basic Information
             </h3>
-            <div className="space-y-4">
-              <div>
-                <label className="font-display text-xs uppercase tracking-wide text-ink/50 block mb-2">
-                  Product Name
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="md:col-span-2 space-y-1.5">
+                <label htmlFor="name" className="font-display text-[11px] uppercase tracking-widest text-ink/70 ml-1 block">
+                  Product Name <span className="text-madder">*</span>
                 </label>
                 <input
+                  id="name"
                   name="name"
                   value={form.name}
                   onChange={handleChange}
                   required
-                  placeholder="e.g. Classic White T-Shirt"
-                  className="w-full px-4 py-3 border border-ink/20 rounded-sm focus:outline-none focus:border-indigo bg-transparent"
+                  placeholder="e.g. Classic White Heavyweight T-Shirt"
+                  className="w-full px-4 py-3.5 border border-ink/15 rounded-sm focus:outline-none focus:border-indigo focus:ring-1 focus:ring-indigo bg-white font-display text-sm text-ink transition-all"
                 />
               </div>
 
-              <div>
-                <label className="font-display text-xs uppercase tracking-wide text-ink/50 block mb-2">
-                  Description
+              <div className="md:col-span-2 space-y-1.5">
+                <label htmlFor="description" className="font-display text-[11px] uppercase tracking-widest text-ink/70 ml-1 block">
+                  Description <span className="text-madder">*</span>
                 </label>
                 <textarea
+                  id="description"
                   name="description"
                   value={form.description}
                   onChange={handleChange}
                   required
-                  rows={3}
-                  placeholder="Describe the fabric, fit, and feel of the product"
-                  className="w-full px-4 py-3 border border-ink/20 rounded-sm focus:outline-none focus:border-indigo bg-transparent"
+                  rows={4}
+                  placeholder="Describe the fabric, fit, feel, and styling recommendations..."
+                  className="w-full px-4 py-3.5 border border-ink/15 rounded-sm focus:outline-none focus:border-indigo focus:ring-1 focus:ring-indigo bg-white font-display text-sm text-ink transition-all resize-y"
                 />
               </div>
 
-              <div>
-                <label className="font-display text-xs uppercase tracking-wide text-ink/50 block mb-2">
-                  Brand
+              <div className="space-y-1.5">
+                <label htmlFor="brand" className="font-display text-[11px] uppercase tracking-widest text-ink/70 ml-1 block">
+                  Brand Label
                 </label>
                 <input
+                  id="brand"
                   name="brand"
                   value={form.brand}
                   onChange={handleChange}
-                  placeholder="e.g. Weavind"
-                  className="w-full px-4 py-3 border border-ink/20 rounded-sm focus:outline-none focus:border-indigo bg-transparent"
+                  placeholder="e.g. Weavind Essentials"
+                  className="w-full px-4 py-3.5 border border-ink/15 rounded-sm focus:outline-none focus:border-indigo focus:ring-1 focus:ring-indigo bg-white font-display text-sm text-ink transition-all"
                 />
               </div>
             </div>
           </section>
 
-          {/* Pricing & Inventory */}
-          <section>
-            <h3 className="font-display uppercase tracking-wide text-xs text-madder mb-4 pb-2 border-b border-ink/10">
-              Pricing & Inventory
+          {/* Section 2: Taxonomy */}
+          <section className="bg-bone/30 border border-ink/10 p-6 sm:p-8 rounded-sm">
+            <h3 className="font-display text-sm uppercase tracking-widest text-ink/80 mb-6 flex items-center gap-3">
+              <span className="w-6 h-[1px] bg-ink/20 block" />
+              Taxonomy & Classification
             </h3>
-            <div className="flex flex-col sm:flex-row gap-4 mb-4">
-              <div className="w-full sm:w-1/2">
-                <label className="font-display text-xs uppercase tracking-wide text-ink/50 block mb-2">
-                  MRP / Original Price (Rs.)
+            
+            <div className="space-y-8">
+              <div>
+                <label className="font-display text-[11px] uppercase tracking-widest text-ink/70 ml-1 block mb-3">
+                  Primary Category <span className="text-madder">*</span>
+                </label>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {['Men', 'Women', 'Kids', 'Unisex'].map((cat) => (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => handleCategoryChange(cat)}
+                      className={`flex flex-col items-center justify-center py-4 px-2 rounded-sm border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo ${
+                        form.category === cat
+                          ? 'border-indigo bg-indigo/5 shadow-sm'
+                          : 'border-ink/15 bg-white hover:border-indigo/40'
+                      }`}
+                    >
+                      <span className={`font-display text-sm tracking-wide ${form.category === cat ? 'text-indigo font-600' : 'text-ink/70'}`}>
+                        {cat}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="font-display text-[11px] uppercase tracking-widest text-ink/70 ml-1 block mb-3">
+                  Product Type <span className="text-madder">*</span>
+                </label>
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                  {currentTypeOptions.map((type) => (
+                    <button
+                      key={type}
+                      type="button"
+                      onClick={() => setForm({ ...form, productType: type })}
+                      className={`py-2.5 px-2 rounded-sm font-display text-xs uppercase tracking-wider border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo ${
+                        form.productType === type
+                          ? 'border-indigo bg-indigo text-white shadow-sm'
+                          : 'border-ink/15 bg-white text-ink/60 hover:border-indigo/40 hover:text-ink'
+                      }`}
+                    >
+                      {type}
+                    </button>
+                  ))}
+                </div>
+                {!form.productType && (
+                  <p className="font-display text-[10px] text-madder/70 mt-3 uppercase tracking-widest ml-1">
+                    Please select a product type to continue.
+                  </p>
+                )}
+              </div>
+            </div>
+          </section>
+
+          {/* Section 3: Pricing & Inventory */}
+          <section className="bg-bone/30 border border-ink/10 p-6 sm:p-8 rounded-sm">
+            <h3 className="font-display text-sm uppercase tracking-widest text-ink/80 mb-6 flex items-center gap-3">
+              <span className="w-6 h-[1px] bg-ink/20 block" />
+              Pricing, Inventory & Policies
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-1.5">
+                <label htmlFor="mrp" className="font-display text-[11px] uppercase tracking-widest text-ink/70 ml-1 block">
+                  Original MRP (₹) <span className="text-madder">*</span>
+                </label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 font-display text-ink/40">₹</span>
+                  <input
+                    id="mrp"
+                    type="number"
+                    name="mrp"
+                    value={form.mrp}
+                    onChange={handleChange}
+                    required
+                    min="0"
+                    placeholder="2999"
+                    className="w-full pl-8 pr-4 py-3.5 border border-ink/15 rounded-sm focus:outline-none focus:border-indigo focus:ring-1 focus:ring-indigo bg-white font-display text-sm text-ink transition-all"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label htmlFor="price" className="font-display text-[11px] uppercase tracking-widest text-ink/70 ml-1 block">
+                  Selling Price (₹) <span className="text-madder">*</span>
+                </label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 font-display text-ink/40">₹</span>
+                  <input
+                    id="price"
+                    type="number"
+                    name="price"
+                    value={form.price}
+                    onChange={handleChange}
+                    required
+                    min="0"
+                    placeholder="1999"
+                    className="w-full pl-8 pr-4 py-3.5 border border-ink/15 rounded-sm focus:outline-none focus:border-indigo focus:ring-1 focus:ring-indigo bg-white font-display text-sm text-ink transition-all"
+                  />
+                </div>
+              </div>
+
+              {discountPreview > 0 && (
+                <div className="md:col-span-2 bg-indigo/5 border border-indigo/20 rounded-sm p-4 flex items-center gap-3">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-indigo">
+                    <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line>
+                  </svg>
+                  <p className="font-display text-sm text-ink">
+                    This setup yields a <span className="text-indigo font-600">{discountPreview}% discount</span>. Customers will see <span className="line-through text-ink/50 mx-1">₹{form.mrp}</span> ₹{form.price}.
+                  </p>
+                </div>
+              )}
+
+              <div className="space-y-1.5">
+                <label htmlFor="stock" className="font-display text-[11px] uppercase tracking-widest text-ink/70 ml-1 block">
+                  Stock Quantity <span className="text-madder">*</span>
                 </label>
                 <input
+                  id="stock"
                   type="number"
-                  name="mrp"
-                  value={form.mrp}
+                  name="stock"
+                  value={form.stock}
                   onChange={handleChange}
                   required
                   min="0"
-                  placeholder="e.g. 1999"
-                  className="w-full px-4 py-3 border border-ink/20 rounded-sm focus:outline-none focus:border-indigo bg-transparent"
+                  placeholder="e.g. 50"
+                  className="w-full px-4 py-3.5 border border-ink/15 rounded-sm focus:outline-none focus:border-indigo focus:ring-1 focus:ring-indigo bg-white font-display text-sm text-ink transition-all"
                 />
               </div>
-              <div className="w-full sm:w-1/2">
-                <label className="font-display text-xs uppercase tracking-wide text-ink/50 block mb-2">
-                  Selling Price (Rs.)
+
+              <div className="space-y-1.5">
+                <label htmlFor="returnPolicyDays" className="font-display text-[11px] uppercase tracking-widest text-ink/70 ml-1 block flex items-center justify-between">
+                  <span>Return Window (Days)</span>
+                  <span className="text-ink/40 lowercase tracking-normal">0 = Final Sale</span>
                 </label>
                 <input
+                  id="returnPolicyDays"
                   type="number"
-                  name="price"
-                  value={form.price}
+                  name="returnPolicyDays"
+                  value={form.returnPolicyDays}
                   onChange={handleChange}
-                  required
                   min="0"
-                  placeholder="e.g. 1299"
-                  className="w-full px-4 py-3 border border-ink/20 rounded-sm focus:outline-none focus:border-indigo bg-transparent"
+                  className="w-full px-4 py-3.5 border border-ink/15 rounded-sm focus:outline-none focus:border-indigo focus:ring-1 focus:ring-indigo bg-white font-display text-sm text-ink transition-all"
                 />
               </div>
             </div>
+          </section>
 
-            {discountPreview > 0 && (
-              <div className="bg-gold/10 border border-gold/30 rounded-sm px-4 py-2.5 mb-4">
-                <p className="font-display text-sm text-ink">
-                  <span className="text-madder font-semibold">{discountPreview}% OFF</span>
-                  {' '}— Customers will see Rs.{form.mrp} struck through, selling at Rs.{form.price}
-                </p>
+          {/* Section 4: Variants & Media (Delegated to external components) */}
+          <section className="bg-bone/30 border border-ink/10 p-6 sm:p-8 rounded-sm">
+            <h3 className="font-display text-sm uppercase tracking-widest text-ink/80 mb-6 flex items-center gap-3">
+              <span className="w-6 h-[1px] bg-ink/20 block" />
+              Variants & Media
+            </h3>
+            
+            <div className="space-y-8">
+              <div className="space-y-1.5">
+                <label className="font-display text-[11px] uppercase tracking-widest text-ink/70 ml-1 block">
+                  Available Sizes <span className="text-madder">*</span>
+                </label>
+                <TagInput
+                  tags={form.sizes}
+                  onChange={(sizes) => setForm({ ...form, sizes })}
+                  placeholder="Type size and press Enter (e.g. S, M, L, XL)"
+                />
               </div>
-            )}
 
-            <div>
-              <label className="font-display text-xs uppercase tracking-wide text-ink/50 block mb-2">
-                Stock Quantity
-              </label>
-              <input
-                type="number"
-                name="stock"
-                value={form.stock}
-                onChange={handleChange}
-                required
-                min="0"
-                className="w-full px-4 py-3 border border-ink/20 rounded-sm focus:outline-none focus:border-indigo bg-transparent"
-              />
+              <div className="space-y-1.5">
+                <label className="font-display text-[11px] uppercase tracking-widest text-ink/70 ml-1 block">
+                  Available Colors
+                </label>
+                <TagInput
+                  tags={form.colors}
+                  onChange={(colors) => setForm({ ...form, colors })}
+                  placeholder="Type color and press Enter (e.g. Vintage Black)"
+                />
+              </div>
+
+              <div className="space-y-1.5 pt-4 border-t border-ink/5">
+                <label className="font-display text-[11px] uppercase tracking-widest text-ink/70 ml-1 block">
+                  Product Images
+                </label>
+                <ImageUrlInput
+                  images={form.images}
+                  onChange={(images) => setForm({ ...form, images })}
+                />
+              </div>
             </div>
           </section>
 
-          {/* Category */}
-          <section>
-            <h3 className="font-display uppercase tracking-wide text-xs text-madder mb-4 pb-2 border-b border-ink/10">
-              Category
-            </h3>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {['Men', 'Women', 'Kids', 'Unisex'].map((cat) => (
-                <button
-                  key={cat}
-                  type="button"
-                  onClick={() => handleCategoryChange(cat)}
-                  className={
-                    form.category === cat
-                      ? 'py-3 rounded-sm font-display text-sm border-2 border-indigo bg-indigo/10 text-indigo'
-                      : 'py-3 rounded-sm font-display text-sm border border-ink/20 text-ink/60 hover:border-indigo/50'
-                  }
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
-          </section>
-
-          {/* Product Type */}
-          <section>
-            <h3 className="font-display uppercase tracking-wide text-xs text-madder mb-4 pb-2 border-b border-ink/10">
-              Product Type
-            </h3>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {currentTypeOptions.map((type) => (
-                <button
-                  key={type}
-                  type="button"
-                  onClick={() => setForm({ ...form, productType: type })}
-                  className={
-                    form.productType === type
-                      ? 'py-2.5 rounded-sm font-display text-sm border-2 border-indigo bg-indigo/10 text-indigo'
-                      : 'py-2.5 rounded-sm font-display text-sm border border-ink/20 text-ink/60 hover:border-indigo/50'
-                  }
-                >
-                  {type}
-                </button>
-              ))}
-            </div>
-            <p className="font-display text-xs text-ink/40 mt-3">
-              Type options change based on the selected category above.
-            </p>
-          </section>
-
-          {/* Sizes */}
-          <section>
-            <h3 className="font-display uppercase tracking-wide text-xs text-madder mb-4 pb-2 border-b border-ink/10">
-              Available Sizes
-            </h3>
-            <TagInput
-              tags={form.sizes}
-              onChange={(sizes) => setForm({ ...form, sizes })}
-              placeholder="Type a size and press Enter (e.g. S, M, L, XL)"
-            />
-          </section>
-
-          {/* Colors */}
-          <section>
-            <h3 className="font-display uppercase tracking-wide text-xs text-madder mb-4 pb-2 border-b border-ink/10">
-              Available Colors
-            </h3>
-            <TagInput
-              tags={form.colors}
-              onChange={(colors) => setForm({ ...form, colors })}
-              placeholder="Type a color and press Enter (e.g. Black, White)"
-            />
-          </section>
-
-          {/* Images */}
-          <section>
-            <h3 className="font-display uppercase tracking-wide text-xs text-madder mb-4 pb-2 border-b border-ink/10">
-              Product Images
-            </h3>
-            <ImageUrlInput
-              images={form.images}
-              onChange={(images) => setForm({ ...form, images })}
-            />
-          </section>
-
-          {/* Return Policy */}
-          <section>
-            <h3 className="font-display uppercase tracking-wide text-xs text-madder mb-4 pb-2 border-b border-ink/10">
-              Return Policy
-            </h3>
-            <div>
-              <label className="font-display text-xs uppercase tracking-wide text-ink/50 block mb-2">
-                Return Window (Days)
-              </label>
-              <input
-                type="number"
-                name="returnPolicyDays"
-                value={form.returnPolicyDays}
-                onChange={handleChange}
-                min="0"
-                className="w-full px-4 py-3 border border-ink/20 rounded-sm focus:outline-none focus:border-indigo bg-transparent"
-              />
-              <p className="font-display text-xs text-ink/40 mt-2">
-                Standard Weavind policy is 7 days. Set to 0 for non-returnable items.
+          {/* Sticky Submission Footer */}
+          <div className="sticky bottom-4 z-40 bg-bone/95 backdrop-blur-md border border-ink/10 p-4 sm:p-6 rounded-sm shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4 mt-12">
+            <div className="text-center sm:text-left">
+              <p className="font-body text-lg text-ink">Ready to publish?</p>
+              <p className="font-display text-[10px] uppercase tracking-widest text-ink/50 mt-0.5">
+                Verify all fields before saving
               </p>
             </div>
-          </section>
-
-          {error && (
-            <p className="text-madder text-sm font-display bg-madder/10 border border-madder/20 rounded-sm px-4 py-3">
-              {error}
-            </p>
-          )}
-
-          <motion.button
-            whileHover={{ scale: 1.01 }}
-            whileTap={{ scale: 0.98 }}
-            type="submit"
-            disabled={loading}
-            className="w-full py-4 bg-ink text-bone font-display uppercase tracking-wide text-sm rounded-sm hover:bg-indigo transition-colors disabled:opacity-50"
-          >
-            {loading ? 'Saving...' : isEditMode ? 'Update Product' : 'Add Product'}
-          </motion.button>
+            
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              type="submit"
+              disabled={loading}
+              className="w-full sm:w-auto px-10 py-4.5 bg-ink text-bone font-display uppercase tracking-widest text-xs rounded-sm hover:bg-indigo transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold shadow-sm disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {loading ? (
+                <>
+                  <div className="w-3.5 h-3.5 border-2 border-bone border-t-transparent rounded-full animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                  {isEditMode ? 'Update Product' : 'Publish Product'}
+                </>
+              )}
+            </motion.button>
+          </div>
         </form>
       </motion.div>
     </div>

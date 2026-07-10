@@ -25,3 +25,13 @@ html {
 html::-webkit-scrollbar {
   display: none; /* Chrome, Safari, Opera */
 }
+
+/* Shimmer animation for loading skeletons */
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}

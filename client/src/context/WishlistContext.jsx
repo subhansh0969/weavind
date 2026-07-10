@@ -7,17 +7,22 @@ const WishlistContext = createContext();
 export function WishlistProvider({ children }) {
   const { user } = useAuth();
   const [wishlist, setWishlist] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const fetchWishlist = async () => {
     if (!user) {
       setWishlist([]);
+      setLoading(false);
       return;
     }
+    setLoading(true);
     try {
       const res = await API.get('/wishlist');
       setWishlist(res.data);
     } catch (err) {
       console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -51,7 +56,7 @@ export function WishlistProvider({ children }) {
 
   return (
     <WishlistContext.Provider
-      value={{ wishlist, isWishlisted, toggleWishlist, wishlistCount: wishlist.length }}
+      value={{ wishlist, loading, isWishlisted, toggleWishlist, wishlistCount: wishlist.length }}
     >
       {children}
     </WishlistContext.Provider>

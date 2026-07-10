@@ -3,10 +3,11 @@ import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useWishlist } from '../context/WishlistContext';
 import ProductCard from '../components/ProductCard';
+import ProductCardSkeleton from '../components/ProductCardSkeleton';
 
 function Wishlist() {
   const { user } = useAuth();
-  const { wishlist } = useWishlist();
+  const { wishlist, loading } = useWishlist();
 
   if (!user) {
     return (
@@ -15,6 +16,18 @@ function Wishlist() {
         <Link to="/login" className="text-indigo font-display underline">
           Go to Login
         </Link>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <ProductCardSkeleton key={i} />
+          ))}
+        </div>
       </div>
     );
   }
