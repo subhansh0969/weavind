@@ -1,149 +1,148 @@
-import { useState, useEffect } from 'react';
-import API from '../api/axios';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
-const CATEGORIES = ['All', 'Men', 'Women', 'Kids', 'Unisex'];
+const CATEGORIES = [
+  { label: 'All', value: '' },
+  { label: 'Men', value: 'Men' },
+  { label: 'Women', value: 'Women' },
+  { label: 'Kids', value: 'Kids' },
+  { label: 'Unisex', value: 'Unisex' },
+];
 
 function FilterBar({ filters, onChange }) {
-  const [searchInput, setSearchInput] = useState(filters.search || '');
-  const [availableTypes, setAvailableTypes] = useState([]);
+  const [showPriceFilter, setShowPriceFilter] = useState(false);
 
-  useEffect(() => {
-    if (filters.category) {
-      API.get('/products/types/' + filters.category)
-        .then((res) => setAvailableTypes(res.data))
-        .catch(() => setAvailableTypes([]));
-    } else {
-      setAvailableTypes([]);
-    }
-  }, [filters.category]);
-
-  const handleSearchSubmit = (e) => {
-    e.preventDefault();
-    onChange({ ...filters, search: searchInput });
+  const handleCategoryChange = (val) => {
+    onChange({ ...filters, category: val });
   };
 
-  const handleCategoryClick = (value) => {
-    // Reset productType when category changes since type list changes too
-    onChange({ ...filters, category: value, productType: '' });
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    onChange({ ...filters, [name]: value });
   };
+
+  const clearPriceFilters = () => {
+    onChange({ ...filters, minPrice: '', maxPrice: '' });
+    setShowPriceFilter(false);
+  };
+
+  const hasActivePrice = filters.minPrice || filters.maxPrice;
 
   return (
-    <div className="mb-8 space-y-4">
-      {/* Search bar */}
-      <form onSubmit={handleSearchSubmit} className="relative max-w-md">
-        <input
-          type="text"
-          value={searchInput}
-          onChange={(e) => setSearchInput(e.target.value)}
-          placeholder="Search products..."
-          className="w-full pl-10 pr-4 py-2.5 border border-ink/20 rounded-sm focus:outline-none focus:border-indigo bg-transparent text-sm"
-        />
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          className="absolute left-3 top-1/2 -translate-y-1/2 text-ink/40"
-        >
-          <circle cx="11" cy="11" r="8" />
-          <path d="m21 21-4.35-4.35" />
-        </svg>
-      </form>
-
-      {/* Category + Sort row */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex flex-wrap gap-2">
+    <div className="bg-bone border-y border-ink/10 py-5 my-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        
+        {/* Row 1 / Left: Category Pills */}
+        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
           {CATEGORIES.map((cat) => {
-            const value = cat === 'All' ? '' : cat;
-            const isActive = filters.category === value;
+            const isActive = filters.category === cat.value;
             return (
               <button
-                key={cat}
-                onClick={() => handleCategoryClick(value)}
-                className={
+                key={cat.label}
+                onClick={() => handleCategoryChange(cat.value)}
+                className={`px-4 py-2 rounded-sm text-xs font-display uppercase tracking-wider transition-all duration-200 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ink ${
                   isActive
-                    ? 'px-4 py-2 rounded-full font-display text-xs uppercase tracking-wide bg-indigo text-white'
-                    : 'px-4 py-2 rounded-full font-display text-xs uppercase tracking-wide border border-ink/20 text-ink/60 hover:border-indigo/50'
-                }
+                    ? 'bg-ink text-bone font-semibold shadow-sm'
+                    : 'bg-transparent text-ink/70 hover:bg-ink/5 hover:text-ink'
+                }`}
               >
-                {cat}
+                {cat.label}
               </button>
             );
           })}
         </div>
 
-        <select
-          value={filters.sort || 'newest'}
-          onChange={(e) => onChange({ ...filters, sort: e.target.value })}
-          className="px-4 py-2 border border-ink/20 rounded-sm font-display text-xs uppercase tracking-wide text-ink/70 bg-transparent focus:outline-none focus:border-indigo"
-        >
-          <option value="newest">Newest First</option>
-          <option value="price_asc">Price: Low to High</option>
-          <option value="price_desc">Price: High to Low</option>
-          <option value="rating">Highest Rated</option>
-        </select>
-      </div>
+        {/* Row 1 / Right: Search, Price Toggle, and Sort */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          {/* Search Input */}
+          <div className="relative flex-1 sm:w-56">
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-ink/40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input
+              type="text"
+              name="search"
+              placeholder="Search pieces..."
+              value={filters.search || ''}
+              onChange={handleInputChange}
+              className="w-full pl-8 pr-3 py-2 bg-bone/50 border border-ink/15 rounded-sm text-xs font-display text-ink placeholder:text-ink/40 focus:outline-none focus:border-ink transition-colors"
+            />
+            {filters.search && (
+              <button 
+                onClick={() => onChange({ ...filters, search: '' })}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-ink/40 hover:text-ink text-xs font-bold"
+              >
+                ×
+              </button>
+            )}
+          </div>
 
-      {/* Product Type pills - only show when a category is selected and types exist */}
-      {filters.category && availableTypes.length > 0 && (
-        <div className="flex flex-wrap gap-2">
+          {/* Price Toggle Button */}
           <button
-            onClick={() => onChange({ ...filters, productType: '' })}
-            className={
-              !filters.productType
-                ? 'px-3 py-1.5 rounded-full font-display text-[11px] uppercase tracking-wide bg-ink text-bone'
-                : 'px-3 py-1.5 rounded-full font-display text-[11px] uppercase tracking-wide border border-ink/15 text-ink/50 hover:border-ink/40'
-            }
+            onClick={() => setShowPriceFilter(!showPriceFilter)}
+            className={`px-3 py-2 border rounded-sm text-xs font-display uppercase tracking-wider flex items-center gap-1.5 transition-colors ${
+              hasActivePrice || showPriceFilter
+                ? 'bg-ink/10 border-ink text-ink font-semibold'
+                : 'bg-transparent border-ink/15 text-ink/70 hover:border-ink/40'
+            }`}
           >
-            All Types
+            <span>Price</span>
+            {hasActivePrice && <span className="w-1.5 h-1.5 rounded-full bg-madder"></span>}
           </button>
-          {availableTypes.map((type) => (
-            <button
-              key={type}
-              onClick={() => onChange({ ...filters, productType: type })}
-              className={
-                filters.productType === type
-                  ? 'px-3 py-1.5 rounded-full font-display text-[11px] uppercase tracking-wide bg-ink text-bone'
-                  : 'px-3 py-1.5 rounded-full font-display text-[11px] uppercase tracking-wide border border-ink/15 text-ink/50 hover:border-ink/40'
-              }
-            >
-              {type}
-            </button>
-          ))}
+
+          {/* Sort Dropdown */}
+          <select
+            name="sort"
+            value={filters.sort || 'newest'}
+            onChange={handleInputChange}
+            className="px-3 py-2 bg-transparent border border-ink/15 rounded-sm text-xs font-display uppercase tracking-wider text-ink/80 focus:outline-none focus:border-ink cursor-pointer"
+          >
+            <option value="newest" className="bg-bone text-ink">Newest First</option>
+            <option value="price-low" className="bg-bone text-ink">Price: Low to High</option>
+            <option value="price-high" className="bg-bone text-ink">Price: High to Low</option>
+          </select>
         </div>
-      )}
-
-      {/* Price range */}
-      <div className="flex items-center gap-3">
-        <span className="font-display text-xs uppercase tracking-wide text-ink/50">
-          Price
-        </span>
-        <input
-          type="number"
-          placeholder="Min"
-          value={filters.minPrice || ''}
-          onChange={(e) => onChange({ ...filters, minPrice: e.target.value })}
-          className="w-24 px-3 py-2 border border-ink/20 rounded-sm focus:outline-none focus:border-indigo bg-transparent text-sm"
-        />
-        <span className="text-ink/30">—</span>
-        <input
-          type="number"
-          placeholder="Max"
-          value={filters.maxPrice || ''}
-          onChange={(e) => onChange({ ...filters, maxPrice: e.target.value })}
-          className="w-24 px-3 py-2 border border-ink/20 rounded-sm focus:outline-none focus:border-indigo bg-transparent text-sm"
-        />
-        {(filters.category || filters.search || filters.minPrice || filters.maxPrice || filters.productType) && (
-          <button
-            onClick={() => onChange({ category: '', search: '', minPrice: '', maxPrice: '', productType: '', sort: filters.sort })}
-            className="font-display text-xs uppercase tracking-wide text-madder hover:underline ml-2"
-          >
-            Clear Filters
-          </button>
-        )}
       </div>
+
+      {/* Row 2 (Expandable): Min / Max Price Sliders */}
+      <AnimatePresence>
+        {showPriceFilter && (
+          <motion.div
+            initial={{ height: 0, opacity: 0, marginTop: 0 }}
+            animate={{ height: 'auto', opacity: 1, marginTop: 16 }}
+            exit={{ height: 0, opacity: 0, marginTop: 0 }}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+            className="overflow-hidden border-t border-ink/10 pt-4 flex flex-wrap items-center justify-end gap-3 text-xs font-display"
+          >
+            <span className="text-ink/60 uppercase tracking-wider">Range (₹):</span>
+            <input
+              type="number"
+              name="minPrice"
+              placeholder="Min"
+              value={filters.minPrice || ''}
+              onChange={handleInputChange}
+              className="w-24 px-3 py-1.5 bg-bone/50 border border-ink/15 rounded-sm focus:outline-none focus:border-ink text-ink"
+            />
+            <span className="text-ink/40">—</span>
+            <input
+              type="number"
+              name="maxPrice"
+              placeholder="Max"
+              value={filters.maxPrice || ''}
+              onChange={handleInputChange}
+              className="w-24 px-3 py-1.5 bg-bone/50 border border-ink/15 rounded-sm focus:outline-none focus:border-ink text-ink"
+            />
+            {hasActivePrice && (
+              <button
+                onClick={clearPriceFilters}
+                className="text-[11px] text-madder hover:underline ml-2 uppercase tracking-wider font-semibold"
+              >
+                Reset Price
+              </button>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

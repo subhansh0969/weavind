@@ -1,36 +1,38 @@
+import { lazy, Suspense } from 'react';
 import { Routes, Route } from 'react-router-dom';
-import Navbar from './components/Navbar';
-import Footer from './components/Footer';
-import ScrollToTop from './components/ScrollToTop';
-import Home from './pages/Home';
-import ProductDetail from './pages/ProductDetail';
-import Cart from './pages/Cart';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import Checkout from './pages/Checkout';
-import OrderSuccess from './pages/OrderSuccess';
-import ForgotPassword from './pages/ForgotPassword';
-import ResetPassword from './pages/ResetPassword';
-import MyOrders from './pages/MyOrders';
-import Wishlist from './pages/Wishlist';
-import About from './pages/About';
-import Contact from './pages/Contact';
-import ShippingPolicy from './pages/ShippingPolicy';
-import ReturnsPolicy from './pages/ReturnsPolicy';
-import PrivacyPolicy from './pages/PrivacyPage';
-import Terms from './pages/Terms';
-import FAQ from './pages/FAQ';
-import AdminDashboard from './pages/AdminDashboard';
-import AdminProductForm from './pages/AdminProductForm';
+import Layout from './components/Layout';
 import AdminRoute from './components/AdminRoute';
+import PageLoader from './components/PageLoader';
+
+// Route-based code splitting: each page loads only when visited,
+// keeping the initial bundle small and the first paint fast.
+const Home = lazy(() => import('./pages/Home'));
+const ProductDetail = lazy(() => import('./pages/ProductDetail'));
+const Cart = lazy(() => import('./pages/Cart'));
+const Login = lazy(() => import('./pages/Login'));
+const Register = lazy(() => import('./pages/Register'));
+const Checkout = lazy(() => import('./pages/Checkout'));
+const OrderSuccess = lazy(() => import('./pages/OrderSuccess'));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
+const ResetPassword = lazy(() => import('./pages/ResetPassword'));
+const MyOrders = lazy(() => import('./pages/MyOrders'));
+const Wishlist = lazy(() => import('./pages/Wishlist'));
+const About = lazy(() => import('./pages/About'));
+const Contact = lazy(() => import('./pages/Contact'));
+const ShippingPolicy = lazy(() => import('./pages/ShippingPolicy'));
+const ReturnsPolicy = lazy(() => import('./pages/ReturnsPolicy'));
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPage'));
+const Terms = lazy(() => import('./pages/Terms'));
+const FAQ = lazy(() => import('./pages/FAQ'));
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
+const AdminProductForm = lazy(() => import('./pages/AdminProductForm'));
+const NotFound = lazy(() => import('./pages/PageNotFound'));
 
 function App() {
   return (
-    <div className="min-h-screen bg-bone flex flex-col overflow-x-hidden">
-      <ScrollToTop />
-      <Navbar />
-      <div className="flex-1">
-        <Routes>
+    <Suspense fallback={<PageLoader />}>
+      <Routes>
+        <Route element={<Layout />}>
           <Route path="/" element={<Home />} />
           <Route path="/product/:id" element={<ProductDetail />} />
           <Route path="/cart" element={<Cart />} />
@@ -49,34 +51,18 @@ function App() {
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/faq" element={<FAQ />} />
-          <Route
-            path="/admin"
-            element={
-              <AdminRoute>
-                <AdminDashboard />
-              </AdminRoute>
-            }
-          />
-          <Route
-            path="/admin/products/new"
-            element={
-              <AdminRoute>
-                <AdminProductForm />
-              </AdminRoute>
-            }
-          />
-          <Route
-            path="/admin/products/edit/:id"
-            element={
-              <AdminRoute>
-                <AdminProductForm />
-              </AdminRoute>
-            }
-          />
-        </Routes>
-      </div>
-      <Footer />
-    </div>
+
+          {/* Admin routes nested under one guard instead of repeating it per route */}
+          <Route path="/admin" element={<AdminRoute />}>
+            <Route index element={<AdminDashboard />} />
+            <Route path="products/new" element={<AdminProductForm />} />
+            <Route path="products/edit/:id" element={<AdminProductForm />} />
+          </Route>
+
+          <Route path="*" element={<NotFound />} />
+        </Route>
+      </Routes>
+    </Suspense>
   );
 }
 
