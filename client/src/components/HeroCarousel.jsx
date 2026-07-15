@@ -196,7 +196,7 @@ function HeroCarousel() {
       <button
         onClick={prev}
         aria-label="Previous slide"
-        className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-bone/20 backdrop-blur-sm items-center justify-center text-current opacity-0 hover:opacity-100 group-hover:opacity-60 transition-opacity z-10"
+        className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-bone/20 backdrop-blur-sm items-center justify-center opacity-60 hover:opacity-100 transition-opacity z-10"
         style={{ color: isDark ? '#F5F0E6' : '#161616' }}
       >
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
